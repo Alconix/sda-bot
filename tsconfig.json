@@ -19,8 +19,5 @@
         "baseUrl": "./"
     },
     "include": ["./**/*.ts"],
-    "exclude": ["node_modules", "dist"],
-    "ts-node": {
-        "swc": true
-    }
+    "exclude": ["node_modules", "dist"]
 }
