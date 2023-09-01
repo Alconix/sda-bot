@@ -16,8 +16,13 @@ jobs:
                   key: ${{ secrets.PRIVATE_KEY }}
                   port: ${{ secrets.PORT }}
                   script: |
+                      echo $HOME
+                      export PATH="$PATH:$HOME/.local/share/pnpm/pm2:$HOME/.local/share/pnpm/pnpm"
+                      export NVM_DIR=~/.nvm
+                      source ~/.nvm/nvm.sh
+                      echo $PATH
                       cd sda-bot
                       git pull origin main
                       pnpm install
                       pnpm build
-                      pm2 reload index
+                      pm2 reload sda-bot
