@@ -6,7 +6,8 @@
     "scripts": {
         "dev": "nodemon src/index.ts",
         "build": "tsc",
-        "prod": "rm -rf dist && pnpm build && node dist/index.js"
+        "prod": "rm -rf dist && pnpm build && node dist/index.js",
+        "commands": "ts-node tools/deploy-commands"
     },
     "keywords": [],
     "author": "Alconix",

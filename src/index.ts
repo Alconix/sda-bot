@@ -1,25 +1,9 @@
-import {
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    ChannelType,
-    Client,
-    Colors,
-    Events,
-    GatewayIntentBits,
-} from "discord.js";
-import type { TextChannel } from "discord.js";
+import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
 import * as dotenv from "dotenv";
-import {
-    ADMIN_CHANNEL_HOOk_ID,
-    ADMIN_CHANNEL_ID,
-    GUILD_ID,
-    CATEGORY_ID,
-    TALK_CHANNEL_ID,
-    APPLY_ROLE_ID,
-    ARCHIVE_ID,
-    CHAMPION_ID,
-} from "./constants";
+import path from "path";
+import { readdirSync } from "fs";
+
+import { registerHandleApply } from "./apply";
 
 dotenv.config();
 
@@ -37,131 +21,39 @@ client.once(Events.ClientReady, async (c) => {
     console.log(`Ready ! Logged in as ${c.user.tag}`);
 });
 
-const generateControlActionRow = () => {
-    const accept = new ButtonBuilder()
-        .setCustomId("accept")
-        .setLabel("Accepter")
-        .setStyle(ButtonStyle.Success);
+registerHandleApply(client);
 
-    const decline = new ButtonBuilder()
-        .setCustomId("decline")
-        .setLabel("Refuser")
-        .setStyle(ButtonStyle.Danger);
+client.commands = new Collection();
 
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(accept, decline);
+const foldersPath = path.join(__dirname, "../src/commands");
+const commandsFolder = readdirSync(foldersPath);
 
-    return { row, accept, decline };
-};
-
-client.on("messageCreate", async (message) => {
-    if (
-        message.channel.id === ADMIN_CHANNEL_ID &&
-        message.author.id === ADMIN_CHANNEL_HOOk_ID &&
-        message.author.bot
-    ) {
-        // Get guild instance
-        const guild = client.guilds.cache.get(GUILD_ID);
-        if (!guild) return;
-
-        // Get apply member instance
-        const members = await guild?.members.fetch();
-
-        const applyMember = members?.find(
-            (member) =>
-                member.user.tag ===
-                message.embeds.at(0)?.fields.find((a) => a.name === "Nom d\\'utilisateur discord")
-                    ?.value
+for (const file of commandsFolder) {
+    const filePath = path.join(foldersPath, file);
+    const command = require(filePath);
+    if ("data" in command && "execute" in command) {
+        client.commands.set(command.data.name, command);
+    } else {
+        console.log(
+            `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
         );
+    }
+}
 
-        const applyDisplayName = applyMember?.nickname ?? applyMember?.user.username;
+client.on(Events.InteractionCreate, async (interaction) => {
+    if (interaction.isChatInputCommand()) {
+        const command = interaction.client.commands.get(interaction.commandName);
 
-        if (!applyMember) {
-            // Stop and send error if member is not found
-            await message.reply({
-                embeds: [
-                    {
-                        color: Colors.Red,
-                        title: "Error",
-                        description: "Impossible de trouver l'utilisateur",
-                    },
-                ],
-            });
-
+        if (!command) {
+            console.error(`No command matching ${interaction.commandName} found.`);
             return;
         }
 
-        // Get talk channel instance and create thread for private discussion
-        const talkChannel = client.channels.cache.get(TALK_CHANNEL_ID) as TextChannel;
-        const thread = await talkChannel.threads.create({
-            name: `Recrutment ${applyDisplayName}`,
-        });
-
-        // Add reactions for votes
-        const threadInital = await thread.fetchStarterMessage();
-        threadInital?.react("👍");
-        threadInital?.react("👎");
-
-        // Create temp channel for new apply
-        const applyChannel = await guild?.channels.create({
-            name: `recrutement-${applyDisplayName}`,
-            type: ChannelType.GuildText,
-            parent: CATEGORY_ID,
-        });
-
-        // Give permissions to the apply to their channel
-        await applyChannel.permissionOverwrites.create(applyMember, {
-            ViewChannel: true,
-            SendMessages: true,
-            ReadMessageHistory: true,
-        });
-
-        // Send apply info to channel and notify members
-        await applyChannel.send({
-            content: `<@&${CHAMPION_ID}>, nouvelle candidature de <@${applyMember.user.id}>`,
-            embeds: [
-                {
-                    fields: message.embeds.at(0)?.fields,
-                },
-            ],
-            allowedMentions: {
-                parse: ["users", "roles"],
-            },
-        });
-
-        const { row, accept, decline } = generateControlActionRow();
-
-        // Post recrutment controls in admin channel
-        const controls = await message.reply({ components: [row] });
-        const result = await controls.awaitMessageComponent();
-
-        let accepted = false;
-
-        if (result.customId === "accept") {
-            accepted = true;
-
-            // Apply accepted
-            await result.update({
-                components: [row.setComponents(accept.setDisabled(true))],
-            });
-
-            // Add prospect role
-            await applyMember?.roles.add(APPLY_ROLE_ID);
-        } else {
-            // Apply refused
-            await result.update({
-                components: [row.setComponents(decline.setDisabled(true))],
-            });
+        try {
+            await command.execute(interaction);
+        } catch (err) {
+            console.error(err);
         }
-
-        // Send result in thread
-        await thread.send({
-            content: accepted ? "Accepté ✅" : "Refusé ❌",
-        });
-        await threadInital?.react(accepted ? "✅" : "❌");
-        thread.setArchived(true, result.customId === "accept" ? "accepted" : "refused");
-
-        // Archivate channel
-        applyChannel.setParent(ARCHIVE_ID);
     }
 });
 
