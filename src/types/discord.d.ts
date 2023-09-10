@@ -1,4 +1,4 @@
-import type { Message, Client } from "discord.js";
+import type { Message } from "discord.js";
 
 declare module "discord.js" {
     interface Client {

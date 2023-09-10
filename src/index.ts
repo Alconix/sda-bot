@@ -1,11 +1,13 @@
 import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
 import * as dotenv from "dotenv";
-import path from "path";
+import { dirname, join } from "path";
 import { readdirSync } from "fs";
+import { fileURLToPath } from "url";
 
-import { registerHandleApply } from "./apply";
+import { registerHandleApply } from "./apply.js";
 
 dotenv.config();
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Discord bot startup
 const client = new Client({
@@ -25,19 +27,20 @@ registerHandleApply(client);
 
 client.commands = new Collection();
 
-const foldersPath = path.join(__dirname, "../src/commands");
+const foldersPath = join(__dirname, "./commands");
 const commandsFolder = readdirSync(foldersPath);
 
 for (const file of commandsFolder) {
-    const filePath = path.join(foldersPath, file);
-    const command = require(filePath);
-    if ("data" in command && "execute" in command) {
-        client.commands.set(command.data.name, command);
-    } else {
-        console.log(
-            `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
-        );
-    }
+    const filePath = join(foldersPath, file);
+    import(filePath).then((command) => {
+        if ("data" in command && "execute" in command) {
+            client.commands.set(command.data.name, command);
+        } else {
+            console.log(
+                `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
+            );
+        }
+    });
 }
 
 client.on(Events.InteractionCreate, async (interaction) => {

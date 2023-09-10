@@ -2,11 +2,11 @@ import { REST, Routes } from "discord.js";
 import path from "path";
 import { readdirSync } from "fs";
 import * as dotenv from "dotenv";
-import { APPLICATION_ID, GUILD_ID } from "../src/constants";
+import { APPLICATION_ID, GUILD_ID } from "../src/constants.js";
 
 dotenv.config();
 
-const commands = [];
+const commands: unknown[] = [];
 
 if (!process.env.BOT_TOKEN) {
     console.error("Bot token not defined");

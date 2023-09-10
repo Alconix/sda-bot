@@ -16,7 +16,7 @@ import {
     APPLY_ROLE_ID,
     ARCHIVE_ID,
     CHAMPION_ID,
-} from "./constants";
+} from "./constants.js";
 
 const generateControlActionRow = () => {
     const accept = new ButtonBuilder()
