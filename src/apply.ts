@@ -103,17 +103,6 @@ export const registerHandleApply = (client: Client) =>
                 return;
             }
 
-            // Get talk channel instance and create thread for private discussion
-            const talkChannel = client.channels.cache.get(TALK_CHANNEL_ID) as TextChannel;
-            const thread = await talkChannel.threads.create({
-                name: `Recrutment ${applyDisplayName}`,
-            });
-
-            // Add reactions for votes
-            const threadInital = await thread.fetchStarterMessage();
-            threadInital?.react("👍");
-            threadInital?.react("👎");
-
             // Create temp channel for new apply
             const applyChannel = await guild?.channels.create({
                 name: `recrutement-${applyDisplayName}`,
@@ -139,6 +128,25 @@ export const registerHandleApply = (client: Client) =>
                 allowedMentions: {
                     parse: ["users", "roles"],
                 },
+            });
+
+            // Get discussion channel instance and create thread for private discussion
+            const talkChannel = client.channels.cache.get(TALK_CHANNEL_ID) as TextChannel;
+            const thread = await talkChannel.threads.create({
+                name: `Recrutment ${applyDisplayName}`,
+            });
+
+            // Add reactions for votes
+            const threadInital = await thread.fetchStarterMessage();
+            threadInital?.react("👍");
+            threadInital?.react("👎");
+            await thread.send({
+                content: `<#${applyChannel.id}>`,
+                embeds: [
+                    {
+                        fields: embedsFromForm(message.embeds.at(0)?.fields),
+                    },
+                ],
             });
 
             const { row, accept, decline } = generateControlActionRow();
