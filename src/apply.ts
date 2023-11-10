@@ -133,7 +133,7 @@ export const registerHandleApply = (client: Client) =>
             // Get discussion channel instance and create thread for private discussion
             const talkChannel = client.channels.cache.get(TALK_CHANNEL_ID) as TextChannel;
             const thread = await talkChannel.threads.create({
-                name: `Recrutment ${applyDisplayName}`,
+                name: `Recrutement ${applyDisplayName}`,
             });
 
             // Add reactions for votes
