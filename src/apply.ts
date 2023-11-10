@@ -6,7 +6,7 @@ import {
     Colors,
     Events,
 } from "discord.js";
-import type { Client, GuildMember, Message, TextChannel } from "discord.js";
+import type { APIEmbedField, Client, GuildMember, Message, TextChannel } from "discord.js";
 import {
     ADMIN_CHANNEL_HOOk_ID,
     ADMIN_CHANNEL_ID,
@@ -34,6 +34,31 @@ const generateControlActionRow = () => {
     return { row, accept, decline };
 };
 
+const embedsFromForm = (fields: APIEmbedField[] | undefined): APIEmbedField[] => {
+    const result: APIEmbedField[] = [];
+    if (!fields) return result;
+
+    for (const field of fields) {
+        if (field.name === "Quelles sont vos disponibilités ?") {
+            result.push({
+                name: field.name,
+                value: JSON.parse(field.value)[0].join(", "),
+                inline: false,
+            });
+        } else if (field.name === "Nom d'utilisateur discord (sans #, sans majuscules)") {
+            continue;
+        } else {
+            result.push({
+                name: field.name,
+                value: JSON.parse(field.value),
+                inline: false,
+            });
+        }
+    }
+
+    return result;
+};
+
 export const registerHandleApply = (client: Client) =>
     client.on(Events.MessageCreate, async (message: Message<boolean>) => {
         if (
@@ -48,13 +73,17 @@ export const registerHandleApply = (client: Client) =>
             // Get apply member instance
             const members = await guild?.members.fetch();
 
-            const applyMember = members?.find(
-                (member: GuildMember) =>
-                    member.user.tag ===
-                    message.embeds
-                        .at(0)
-                        ?.fields.find((a) => a.name === "Nom d\\'utilisateur discord")?.value
-            );
+            const applyMember = members?.find((member: GuildMember) => {
+                const nameInForm = message.embeds
+                    .at(0)
+                    ?.fields.find(
+                        (a) => a.name === "Nom d'utilisateur discord (sans #, sans majuscules)"
+                    )?.value;
+
+                if (!nameInForm) return null;
+
+                return JSON.parse(nameInForm) === member.user.tag;
+            });
 
             const applyDisplayName = applyMember?.nickname ?? applyMember?.user.username;
 
@@ -103,7 +132,7 @@ export const registerHandleApply = (client: Client) =>
                 content: `<@&${CHAMPION_ID}>, nouvelle candidature de <@${applyMember.user.id}>`,
                 embeds: [
                     {
-                        fields: message.embeds.at(0)?.fields,
+                        fields: embedsFromForm(message.embeds.at(0)?.fields),
                     },
                 ],
                 allowedMentions: {
