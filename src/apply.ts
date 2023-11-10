@@ -73,13 +73,14 @@ export const registerHandleApply = (client: Client) =>
             // Get apply member instance
             const members = await guild?.members.fetch();
 
-            const applyMember = members?.find((member: GuildMember) => {
-                const nameInForm = message.embeds
-                    .at(0)
-                    ?.fields.find(
-                        (a) => a.name === "Nom d'utilisateur discord (sans #, sans majuscules)"
-                    )?.value;
+            const nameInForm = message.embeds
+                .at(0)
+                ?.fields.find(
+                    (a) => a.name === "Nom d'utilisateur discord (sans #, sans majuscules)"
+                )
+                ?.value.toLocaleLowerCase();
 
+            const applyMember = members?.find((member: GuildMember) => {
                 if (!nameInForm) return null;
 
                 return JSON.parse(nameInForm) === member.user.tag;
@@ -94,7 +95,7 @@ export const registerHandleApply = (client: Client) =>
                         {
                             color: Colors.Red,
                             title: "Error",
-                            description: "Impossible de trouver l'utilisateur",
+                            description: `Impossible de trouver l'utilisateur ${nameInForm}`,
                         },
                     ],
                 });
