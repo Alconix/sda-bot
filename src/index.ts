@@ -3,8 +3,10 @@ import * as dotenv from "dotenv";
 import { dirname, join } from "path";
 import { readdirSync } from "fs";
 import { fileURLToPath } from "url";
+import cron from 'cron';
 
 import { registerHandleApply } from "./apply.js";
+import whenRaiding from "./when.js";
 
 dotenv.config();
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -21,6 +23,15 @@ const client = new Client({
 
 client.once(Events.ClientReady, async (c) => {
     console.log(`Ready ! Logged in as ${c.user.tag}`);
+
+    // run /when command on cron schedule
+    cron.CronJob.from({
+        cronTime: '0 9 * * 3' ,
+        onTick: () => {
+            whenRaiding(client);
+        },
+        timeZone: 'Europe/Paris', start: true
+    })
 });
 
 registerHandleApply(client);

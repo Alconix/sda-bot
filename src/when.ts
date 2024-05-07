@@ -1,14 +1,14 @@
-import { ChatInputCommandInteraction, GuildEmoji, SlashCommandBuilder } from "discord.js";
-import { RAID_ROLE_ID } from "../constants.js";
+import { Client, TextChannel } from "discord.js";
+import { RAID_CHANNEL_ID } from "./constants.js";
 
-export const data = new SlashCommandBuilder().setName("when").setDescription("when");
-export const execute = async (interaction: ChatInputCommandInteraction) => {
-    const channel = interaction.channel;
+// Function version of the `/when` command to be used in the main bot loop
+const whenRaiding = async (client: Client) => {
+    const channel = client.channels.cache.get(RAID_CHANNEL_ID) as TextChannel;
 
     await channel?.send({
         poll: {
             question: {
-                text: `When <@&${RAID_ROLE_ID}>ing ???`,
+                text: `When raiding ???`,
             },
             answers: [
                 {
@@ -36,4 +36,6 @@ export const execute = async (interaction: ChatInputCommandInteraction) => {
             allowMultiselect: true,
         }
     });
-};
+}
+
+export default whenRaiding;

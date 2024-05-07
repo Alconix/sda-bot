@@ -3,6 +3,7 @@ import path from "path";
 import { readdirSync } from "fs";
 import * as dotenv from "dotenv";
 import { APPLICATION_ID, GUILD_ID } from "../src/constants.js";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
@@ -14,12 +15,15 @@ if (!process.env.BOT_TOKEN) {
 }
 
 // Get all commands file from the commands folder
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const foldersPath = path.join(__dirname, "../src/commands");
 const commandsFolder = readdirSync(foldersPath);
 
 for (const file of commandsFolder) {
     const filePath = path.join(foldersPath, file);
-    const command = require(filePath);
+    const command = await import(filePath);
     if ("data" in command && "execute" in command) {
         commands.push(command.data.toJSON());
     } else {

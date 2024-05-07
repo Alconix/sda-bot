@@ -13,12 +13,12 @@ jobs:
               with:
                   host: ${{ secrets.HOST }}
                   username: ${{ secrets.USERNAME }}
+                  passphrase: ${{ secrets.PASSPHRASE }}
                   key: ${{ secrets.PRIVATE_KEY }}
                   port: ${{ secrets.PORT }}
                   script: |
-                      export PATH="$PATH:$HOME/.local/share/pnpm/pm2:$HOME/.local/share/pnpm/pnpm"
-                      export NVM_DIR=~/.nvm
-                      source ~/.nvm/nvm.sh
+                      export PNPM_HOME="$HOME/.local/share/pnpm"
+                      export PATH="$PNPM_HOME:$PATH"
                       cd sda-bot
                       git pull origin main
                       pnpm install
