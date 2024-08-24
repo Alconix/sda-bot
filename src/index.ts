@@ -24,14 +24,14 @@ const client = new Client({
 client.once(Events.ClientReady, async (c) => {
     console.log(`Ready ! Logged in as ${c.user.tag}`);
 
-    // run /when command on cron schedule
-    cron.CronJob.from({
-        cronTime: '0 9 * * 3' ,
-        onTick: () => {
-            whenRaiding(client);
-        },
-        timeZone: 'Europe/Paris', start: true
-    })
+    // run /when command on cron schedule [DISABLED]
+    // cron.CronJob.from({
+    //     cronTime: '0 9 * * 3' ,
+    //     onTick: () => {
+    //         whenRaiding(client);
+    //     },
+    //     timeZone: 'Europe/Paris', start: true
+    // })
 });
 
 registerHandleApply(client);
