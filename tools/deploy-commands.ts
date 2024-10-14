@@ -22,6 +22,7 @@ const foldersPath = path.join(__dirname, "../src/commands");
 const commandsFolder = readdirSync(foldersPath);
 
 for (const file of commandsFolder) {
+    console.log(`Adding ${file}...`);
     const filePath = path.join(foldersPath, file);
     const command = await import(filePath);
     if ("data" in command && "execute" in command) {

@@ -183,5 +183,11 @@ export const registerHandleApply = (client: Client) =>
 
             // Archivate channel
             applyChannel.setParent(ARCHIVE_ID);
+            // Give permissions to the apply to their channel
+            await applyChannel.permissionOverwrites.create(applyMember, {
+                ViewChannel: true,
+                SendMessages: true,
+                ReadMessageHistory: true,
+            });
         }
     });
